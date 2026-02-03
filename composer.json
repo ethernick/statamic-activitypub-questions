@@ -1,0 +1,23 @@
+{
+    "name": "ethernick/activitypub-questions",
+    "description": "ActivityPub Questions and Polls for Statamic",
+    "autoload": {
+        "psr-4": {
+            "Ethernick\\ActivityPubQuestions\\": "src/"
+        }
+    },
+    "require": {
+        "ethernick/activitypub-core": "*"
+    },
+    "extra": {
+        "statamic": {
+            "name": "ActivityPub Questions",
+            "description": "ActivityPub Questions and Polls"
+        },
+        "laravel": {
+            "providers": [
+                "Ethernick\\ActivityPubQuestions\\ActivityPubQuestionsServiceProvider"
+            ]
+        }
+    }
+}
