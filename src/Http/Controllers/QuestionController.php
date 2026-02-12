@@ -27,13 +27,13 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         return 'polls';
     }
 
-    protected function returnIndexView($actor)
+    protected function returnIndexView(\Statamic\Contracts\Entries\Entry $actor): mixed
     {
         return null;
     } // TODO: Implement if needed
-    protected function returnShowView($actor, $item)
+    protected function returnShowView(\Statamic\Contracts\Entries\Entry $actor, \Statamic\Contracts\Entries\Entry $item): mixed
     {
-        return null;
+        return null; // Polls usually displayed inline
     } // TODO: Implement
 
     public function handleCreate(array $payload, mixed $localActor, mixed $externalActor): bool
