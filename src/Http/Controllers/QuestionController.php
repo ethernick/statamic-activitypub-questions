@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ethernick\ActivityPubQuestions\Http\Controllers;
 
 use Ethernick\ActivityPubCore\Contracts\ActivityHandlerInterface;
@@ -20,7 +22,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         ];
     }
 
-    protected function getCollectionSlug()
+    protected function getCollectionSlug(): ?string
     {
         return 'polls';
     }
@@ -34,7 +36,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         return null;
     } // TODO: Implement
 
-    public function handleCreate(array $payload, $localActor, $externalActor)
+    public function handleCreate(array $payload, mixed $localActor, mixed $externalActor): bool
     {
         Log::info("QuestionController: Handling Create Question");
         $object = $payload['object'] ?? null;
@@ -76,7 +78,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         return false;
     }
 
-    public function handleUpdate(array $payload, $localActor, $externalActor)
+    public function handleUpdate(array $payload, mixed $localActor, mixed $externalActor): bool
     {
         Log::info("QuestionController: Handling Update Question");
         $object = $payload['object'] ?? null;
@@ -123,7 +125,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         return false;
     }
 
-    public function handleDelete(array $payload, $localActor, $externalActor)
+    public function handleDelete(array $payload, mixed $localActor, mixed $externalActor): bool
     {
         $object = $payload['object'] ?? null;
         $objectId = is_string($object) ? $object : ($object['id'] ?? null);
