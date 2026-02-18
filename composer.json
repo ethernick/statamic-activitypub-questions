@@ -1,5 +1,5 @@
 {
-    "name": "ethernick/activitypub-questions",
+    "name": "ethernick/statamic-activitypub-questions",
     "description": "ActivityPub Questions and Polls for Statamic",
     "autoload": {
         "psr-4": {
@@ -7,7 +7,7 @@
         }
     },
     "require": {
-        "ethernick/activitypub-core": "*"
+        "ethernick/statamic-activitypub-core": "*"
     },
     "extra": {
         "statamic": {
