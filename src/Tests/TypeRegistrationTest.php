@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class TypeRegistrationTest extends TestCase
 {
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_registers_question_activity_type()
     {
         $types = new ActivityPubTypes();
@@ -21,7 +21,7 @@ class TypeRegistrationTest extends TestCase
         $this->assertEquals(QuestionController::class, ActivityPubTypes::getController('Question'));
 
         $this->assertArrayHasKey('Note', $allTypes);
-        $this->assertEquals('Note (aka Post)', $allTypes['Note']['label']);
+        $this->assertEquals('Note', $allTypes['Note']['label']);
         $this->assertEquals(['notes'], ActivityPubTypes::getCollections('Note'));
     }
 }

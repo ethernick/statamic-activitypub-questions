@@ -18,12 +18,30 @@ class PollTest extends TestCase
         \Statamic\Facades\Collection::make('notes')->dated(true)->save();
         \Statamic\Facades\Collection::make('polls')->dated(true)->save();
 
+        // Setup ActivityPub config
+        $path = resource_path('settings/activitypub.yaml');
+        if (!\Statamic\Facades\File::exists(resource_path('settings'))) {
+            \Statamic\Facades\File::makeDirectory(resource_path('settings'));
+        }
+        \Statamic\Facades\File::put($path, "polls:\n  type: Question\n  federated: true\nnotes:\n  type: Note\n  federated: true\n");
+
         \Statamic\Facades\Blink::flush();
 
         Entry::query()->whereIn('collection', ['activities', 'actors', 'notes', 'polls'])->get()->each->delete();
     }
 
-    /** @test */
+    public function tearDown(): void
+    {
+        // Clean up config
+        $path = resource_path('settings/activitypub.yaml');
+        if (\Statamic\Facades\File::exists($path)) {
+            \Statamic\Facades\File::delete($path);
+        }
+
+        parent::tearDown();
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_creates_poll_from_question_activity()
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
@@ -70,7 +88,7 @@ class PollTest extends TestCase
         $this->assertEquals('Red', $poll->get('options')[0]['name']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_updates_poll_counts()
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
@@ -129,7 +147,7 @@ class PollTest extends TestCase
         $this->assertEquals(2, $options[1]['count']);
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_increments_reply_count_on_vote()
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
@@ -183,7 +201,7 @@ class PollTest extends TestCase
         $this->assertEquals(1, $poll->get('reply_count'));
     }
 
-    /** @test */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function it_checks_if_user_voted()
     {
         $user = User::make()->id('admin')->makeSuper()->save();
@@ -210,7 +228,7 @@ class PollTest extends TestCase
                 'content' => 'Poll?',
                 'oneOf' => [
                     ['type' => 'Note', 'name' => 'Yes', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
-                    ['type' => 'Note', 'name' => 'No', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
+                    ['type' => 'NoTe', 'name' => 'No', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
                 ],
                 'attributedTo' => 'https://example.com/sender',
             ],
@@ -264,5 +282,69 @@ class PollTest extends TestCase
 
         $this->assertTrue($pollData['has_voted']);
         $this->assertContains('Yes', $pollData['voted_options']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function it_tallies_incoming_vote_note()
+    {
+        $this->actingAs(User::make()->id('admin')->makeSuper()->save());
+        $localActor = Entry::make()->collection('actors')->slug('me')->data(['title' => 'Me']);
+        $localActor->save();
+        $externalActor = Entry::make()->collection('actors')->slug('voter')->data(['title' => 'Voter', 'activitypub_id' => 'https://example.com/voter']);
+        $externalActor->save();
+        $localActor->set('following_actors', [$externalActor->id()]);
+        $localActor->save();
+
+        // 1. Create Local Poll
+        $poll = Entry::make()
+            ->collection('polls')
+            ->slug('my-poll')
+            ->data([
+                'title' => 'My Poll',
+                'content' => 'What is your favorite?',
+                'options' => [
+                    ['name' => 'Option A', 'count' => 0],
+                    ['name' => 'Option B', 'count' => 0],
+                ],
+                'actor' => $localActor->id(),
+                'is_internal' => true,
+                'activitypub_id' => 'https://example.com/poll/my-poll',
+            ]);
+        $poll->save();
+
+        $this->assertEquals(0, $poll->get('voters_count'));
+
+        // 2. Vote via Note Reply from external actor
+        $votePayload = [
+            'id' => 'https://example.com/activity/vote-1',
+            'type' => 'Create',
+            'actor' => 'https://example.com/voter',
+            'object' => [
+                'id' => 'https://example.com/note/vote-reply-1',
+                'type' => 'Note',
+                'content' => 'Option A',
+                'inReplyTo' => 'https://example.com/poll/my-poll',
+                'attributedTo' => 'https://example.com/voter',
+            ]
+        ];
+
+        $handler = new InboxHandler();
+        $handler->handle($votePayload, $localActor, $externalActor);
+
+        // 3. Verify Tally
+        $poll = $poll->fresh();
+        $this->assertEquals(1, $poll->get('voters_count'));
+        $options = $poll->get('options');
+        $this->assertEquals(1, $options[0]['count']);
+        
+        // Assert Deduplication
+        $handler->handle($votePayload, $localActor, $externalActor);
+        $poll = $poll->fresh();
+        $this->assertEquals(1, $poll->get('voters_count'), 'Should not double-count votes from the same actor');
+
+        // 4. Verify Update Activity was generated (by AutoGenerateActivityListener)
+        $updateActivity = Entry::query()->where('collection', 'activities')->where('type', 'Update')->first();
+        $this->assertNotNull($updateActivity, 'An Update activity should have been generated for the poll counts update');
+        $this->assertContains($poll->id(), $updateActivity->get('object'));
     }
 }

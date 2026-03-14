@@ -17,7 +17,11 @@ class PollsActivityTest extends TestCase
         if (!\Statamic\Facades\File::exists(resource_path('settings'))) {
             \Statamic\Facades\File::makeDirectory(resource_path('settings'));
         }
-        \Statamic\Facades\File::put($path, "polls:\n  type: Question\n  auto_generate: true\n");
+        \Statamic\Facades\Collection::make('actors')->save();
+        \Statamic\Facades\Collection::make('activities')->dated(true)->save();
+        \Statamic\Facades\Collection::make('polls')->dated(true)->save();
+
+        \Statamic\Facades\File::put($path, "polls:\n  type: Question\n  federated: true\n");
 
         $this->cleanup();
     }
