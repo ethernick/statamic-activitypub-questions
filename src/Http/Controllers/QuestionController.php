@@ -158,6 +158,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
 
         $uuid = (string) Str::uuid();
         $content = $object['content'] ?? '';
+        $title = $object['name'] ?? strip_tags($content) ?: $uuid;
         $dateStr = $object['published'] ?? $object['updated'] ?? null;
         $date = $dateStr ? \Illuminate\Support\Carbon::parse($dateStr) : now();
         $published = $date->toIso8601String();
@@ -189,7 +190,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
             ->slug($uuid)
             ->date($date)
             ->data([
-                'title' => strip_tags($content),
+                'title' => $title,
                 'content' => $content,
                 'actor' => $authorActor->id(),
                 'date' => $published,
@@ -218,6 +219,7 @@ class QuestionController extends BaseObjectController implements ActivityHandler
             $poll->set('mentioned_urls', array_values(array_unique($mentioned)));
         }
 
+        $poll->set('title', $title);
         $poll->save();
         return $poll;
     }

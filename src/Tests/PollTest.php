@@ -253,7 +253,7 @@ class PollTest extends TestCase
         // api returns JsonResponse
         $data = $response->getData(true); // as array
 
-        $pollData = collect($data['data'])->firstWhere('id', $poll->id());
+        $pollData = (array) collect($data['data'])->firstWhere('id', $poll->id());
         $this->assertFalse($pollData['has_voted'] ?? false);
 
         // 4. Vote (Create local reply Note)
@@ -278,10 +278,9 @@ class PollTest extends TestCase
         $response = $controller->api($request);
         $data = $response->getData(true);
 
-        $pollData = collect($data['data'])->firstWhere('id', $poll->id());
-
-        $this->assertTrue($pollData['has_voted']);
-        $this->assertContains('Yes', $pollData['voted_options']);
+        $pollData = (array) collect($data['data'])->firstWhere('id', $poll->id());
+        $this->assertTrue($pollData['has_voted'] ?? false);
+        $this->assertContains('Yes', $pollData['voted_options'] ?? []);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -346,5 +345,26 @@ class PollTest extends TestCase
         $updateActivity = Entry::query()->where('collection', 'activities')->where('type', 'Update')->first();
         $this->assertNotNull($updateActivity, 'An Update activity should have been generated for the poll counts update');
         $this->assertContains($poll->id(), $updateActivity->get('object'));
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function it_defaults_title_to_id()
+    {
+        $this->actingAs(User::make()->id('admin')->makeSuper()->save());
+        
+        $poll = Entry::make()
+            ->collection('polls')
+            ->slug('slug-will-be-overwritten')
+            ->data([
+                'content' => '', // Empty content
+                'options' => [['name' => 'A', 'count' => 0]],
+            ]);
+        
+        // Saving should trigger EnsurePollIdIsSlug listener
+        $poll->save();
+        
+        $this->assertNotNull($poll->id());
+        $this->assertEquals($poll->id(), $poll->slug(), 'Slug should be the UUID');
+        $this->assertEquals($poll->id(), $poll->get('title'), 'Title should default to the UUID');
     }
 }

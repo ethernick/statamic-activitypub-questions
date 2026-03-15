@@ -63,6 +63,7 @@ class QuestionInboxHandler implements InboxActivityHandlerInterface
 
         $uuid = (string) Str::uuid();
         $content = $object['content'] ?? '';
+        $title = $object['name'] ?? strip_tags($content) ?: $uuid;
 
         $dateStr = $object['published'] ?? $object['updated'] ?? null;
         $date = $dateStr ? Carbon::parse($dateStr) : now();
@@ -95,7 +96,7 @@ class QuestionInboxHandler implements InboxActivityHandlerInterface
             ->slug($uuid)
             ->date($date)
             ->data([
-                'title' => strip_tags($content),
+                'title' => $title,
                 'content' => $content,
                 'actor' => $authorActor->id(),
                 'date' => $published,
@@ -126,6 +127,7 @@ class QuestionInboxHandler implements InboxActivityHandlerInterface
             $poll->set('mentioned_urls', array_values(array_unique($mentioned)));
         }
 
+        $poll->set('title', $title);
         $poll->save();
         return $poll;
     }

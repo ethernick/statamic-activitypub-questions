@@ -27,6 +27,8 @@
     - [x] Match `Note` content/title to `Poll` options.
     - [x] Increment individual option counts and total `voters_count`.
     - [x] Track ActivityPub IDs of voters on the Poll to prevent double-counting.
+- [x] Fix missing slug/title for inbox Questions to match Note behavior (optional title, defaults to UUID).
+- [x] Fix JS console 404 error by building and publishing Question addon assets.
 - [x] Write integration tests verifying the decoupled Question addon works seamlessly with Core.
 - [ ] Implement `New Poll` action injection into `Inbox.vue` via hooks.
 
