@@ -38,22 +38,26 @@ class ActivityPubQuestionsServiceProvider extends ServiceProvider
             \Statamic\Events\EntrySaved::class,
             \Ethernick\ActivityPubQuestions\Listeners\PollVoteListener::class
         );
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Ethernick\ActivityPubQuestions\Console\Commands\ActivityPubQuestionsInstall::class,
+            ]);
+        }
     }
 
     protected function registerAssets(): void
     {
         $packageName = 'ethernick/activitypub-questions';
         
-        // Detection logic for dist path (Statamic 5 vs 6)
-        $version = Statamic::version();
-        $isV6 = version_compare($version, '6.0.0', '>=');
-        $distPath = $isV6 ? 'v6' : 'v5';
-        $distDir = __DIR__ . "/../dist/{$distPath}";
-
-        if (is_dir($distDir)) {
-            $this->publishes([
-                "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
-            ], 'activitypub-questions');
+        foreach (['v5', 'v6'] as $version) {
+            $distDir = __DIR__ . "/../dist/{$version}";
+            if (is_dir($distDir)) {
+                $this->publishes([
+                    "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
+                ], 'activitypub-questions');
+                break; // Use the first one found
+            }
         }
 
         Statamic::script($packageName, 'cp');

@@ -27,6 +27,40 @@ An ActivityPub Core Extention to add federated polls to Statamic
 - **News Site** → Broadcast updates to federated network
 - **Portfolio** → Share work with decentralized audience
 
+## Installation
+
+### WIP: Add Repository to Composer.json
+
+Until this is registered, add the repository to composer.json
+
+```json
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://worktree.ca/ethernick/statamic-activitypub-questions.git"
+    }
+]
+```
+
+Once added you can run the following
+
+```bash
+$ composer require ethernick/statamic-activitypub-questions:dev-main
+```
+
+Note: if you want to install a specific branch, fee free. Update "main" with the target branch name. Where the full version format is dev-<Branch Name>
+Run Install
+
+```bash
+$ php artisan actvitiypub:questions:install
+```
+
+This install will:
+
+- setup polls
+- create/associate the poll collection
+
+
 
 ## 🤖 AI Disclosure
 

@@ -1,0 +1,104 @@
+tabs:
+  main:
+    display: Main
+    sections:
+      -
+        fields:
+          -
+            handle: title
+            field:
+              type: hidden
+              required: false
+              visibility: hidden
+              default: 'Generating...'
+          -
+            handle: content
+            field:
+              type: markdown
+              display: Content
+          -
+            handle: multiple_choice
+            field:
+              type: toggle
+              display: Select Multiple?
+              instructions: 'If enabled, users can select multiple options (anyOf). If disabled, users choose one (oneOf). If disabled and no options, it is an open-ended question.'
+              default: false
+          -
+            handle: options
+            field:
+              type: grid
+              display: Options
+              instructions: 'Leave empty for an open-ended question.'
+              fields:
+                -
+                  handle: name
+                  field:
+                    type: text
+                -
+                  handle: count
+                  field:
+                    type: integer
+                    default: 0
+                    visibility: hidden
+          -
+            handle: end_time
+            field:
+              type: date
+              display: End Time
+              time_enabled: true
+              mode: single
+          -
+            handle: actor
+            field:
+              type: actor_selector
+              display: Actor
+              max_items: 1
+              collections:
+                - actors
+              mode: select
+  sidebar:
+    display: Sidebar
+    sections:
+      -
+        fields:
+          -
+            handle: slug
+            field:
+              type: slug
+              localizable: true
+              visibility: hidden
+              read_only: true
+              validate: 'max:200'
+          -
+            handle: date
+            field:
+              type: date
+              required: true
+              validate:
+                - required
+              time_enabled: true
+              time_seconds_enabled: true
+          -
+            handle: voters_count
+            field:
+              type: integer
+              display: Voters Count
+              default: 0
+              read_only: true
+          -
+            handle: is_internal
+            field:
+              type: toggle
+              display: Is Internal
+              default: false
+          -
+            handle: closed
+            field:
+              type: toggle
+              display: Closed
+              default: false
+          -
+            handle: guid
+            field:
+              type: text
+              visibility: hidden

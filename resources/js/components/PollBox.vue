@@ -96,6 +96,14 @@ export default {
         permissions: {
             type: Object,
             default: () => ({})
+        },
+        actors: {
+            type: Array,
+            default: () => []
+        },
+        storeNoteUrl: {
+            type: String,
+            default: null
         }
     },
     data() {
@@ -135,30 +143,47 @@ export default {
 
             this.isVoting = true;
 
-            const emitVote = (optionName, isLast = true) => {
-                this.$emit('vote', {
-                    note: note,
-                    option: { name: optionName },
-                    callback: (success) => {
-                         if (isLast) {
-                            this.isVoting = false;
-                            if (success) {
-                                note.has_voted = true;
-                                note.voters_count = (note.voters_count || 0) + 1;
-                                if (note.options) {
-                                    votes.forEach(vName => {
-                                        const opt = note.options.find(o => o.name === vName);
-                                        if (opt) opt.count = (opt.count || 0) + 1;
-                                    });
-                                }
-                            }
-                         }
+            // Direct axios call if URL is available
+            if (this.storeNoteUrl) {
+                const actorId = this.actors && this.actors[0] ? this.actors[0].id : null;
+                
+                this.$axios.post(this.storeNoteUrl + '/vote', {
+                    poll: note.id,
+                    choices: votes,
+                    actor: actorId
+                })
+                .then(() => {
+                    this.isVoting = false;
+                    note.has_voted = true;
+                    // If note.voters_count is not reactive, we might need to force update or use Vue.set
+                    // But usually props in such setups are reactive objects.
+                    note.voters_count = (note.voters_count || 0) + 1;
+                    if (note.options) {
+                        votes.forEach(vName => {
+                            const opt = note.options.find(o => o.name === vName);
+                            if (opt) opt.count = (opt.count || 0) + 1;
+                        });
                     }
+                })
+                .catch(e => {
+                    this.isVoting = false;
+                    const message = e.response && e.response.data.message ? e.response.data.message : e.message;
+                    alert(message);
                 });
-            };
+                return;
+            }
 
-            votes.forEach((vName, index) => {
-                emitVote(vName, index === votes.length - 1);
+            // Fallback for older core versions if needed (emit)
+            this.$emit('vote', {
+                note: note,
+                option: { name: votes[0] }, // Simplified fallback
+                callback: (success) => {
+                     this.isVoting = false;
+                     if (success) {
+                        note.has_voted = true;
+                        note.voters_count = (note.voters_count || 0) + 1;
+                     }
+                }
             });
         }
     }
