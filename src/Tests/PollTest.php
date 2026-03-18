@@ -12,32 +12,20 @@ class PollTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
+        
+        $this->setupCollections(['actors', 'activities', 'notes', 'polls']);
 
-        \Statamic\Facades\Collection::make('actors')->save();
-        \Statamic\Facades\Collection::make('activities')->dated(true)->save();
-        \Statamic\Facades\Collection::make('notes')->dated(true)->save();
-        \Statamic\Facades\Collection::make('polls')->dated(true)->save();
-
-        // Setup ActivityPub config
-        $path = resource_path('settings/activitypub.yaml');
-        if (!\Statamic\Facades\File::exists(resource_path('settings'))) {
-            \Statamic\Facades\File::makeDirectory(resource_path('settings'));
-        }
-        \Statamic\Facades\File::put($path, "polls:\n  type: Question\n  federated: true\nnotes:\n  type: Note\n  federated: true\n");
+        // Setup ActivityPub config in sandbox
+        \Statamic\Facades\File::put(
+            \Ethernick\ActivityPubCore\Services\ActivityPubUtils::settingsPath(), 
+            "polls:\n  type: Question\n  federated: true\nnotes:\n  type: Note\n  federated: true\n"
+        );
 
         \Statamic\Facades\Blink::flush();
-
-        Entry::query()->whereIn('collection', ['activities', 'actors', 'notes', 'polls'])->get()->each->delete();
     }
 
     public function tearDown(): void
     {
-        // Clean up config
-        $path = resource_path('settings/activitypub.yaml');
-        if (\Statamic\Facades\File::exists($path)) {
-            \Statamic\Facades\File::delete($path);
-        }
-
         parent::tearDown();
     }
 
@@ -46,10 +34,10 @@ class PollTest extends TestCase
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
 
-        $localActor = Entry::make()->collection('actors')->slug('me')->data(['title' => 'Me']);
+        $localActor = Entry::make()->collection('actors')->slug('test-me')->data(['title' => 'Me']);
         $localActor->save();
 
-        $externalActor = Entry::make()->collection('actors')->slug('sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
+        $externalActor = Entry::make()->collection('actors')->slug('test-sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
         $externalActor->save();
 
         $localActor->set('following_actors', [$externalActor->id()]);
@@ -93,9 +81,9 @@ class PollTest extends TestCase
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
 
-        $localActor = Entry::make()->collection('actors')->slug('me')->data(['title' => 'Me']);
+        $localActor = Entry::make()->collection('actors')->slug('test-me')->data(['title' => 'Me']);
         $localActor->save();
-        $externalActor = Entry::make()->collection('actors')->slug('sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
+        $externalActor = Entry::make()->collection('actors')->slug('test-sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
         $externalActor->save();
         $localActor->set('following_actors', [$externalActor->id()]);
         $localActor->save();
@@ -173,7 +161,7 @@ class PollTest extends TestCase
 
         $handler = new InboxHandler();
         // Mock external actor
-        $externalActor = Entry::make()->collection('actors')->slug('sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
+        $externalActor = Entry::make()->collection('actors')->slug('test-sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
         $externalActor->save();
         $localActor->set('following_actors', [$externalActor->id()]);
         $localActor->save();
@@ -209,10 +197,10 @@ class PollTest extends TestCase
 
         // 1. Setup Actors
         // Ensure local actor is linked to user
-        $localActor = Entry::make()->collection('actors')->slug('me')->data(['title' => 'Me', 'user' => 'admin']);
+        $localActor = Entry::make()->collection('actors')->slug('test-me')->data(['title' => 'Me', 'user' => 'admin']);
         $localActor->save();
 
-        $externalActor = Entry::make()->collection('actors')->slug('sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
+        $externalActor = Entry::make()->collection('actors')->slug('test-sender')->data(['title' => 'Sender', 'activitypub_id' => 'https://example.com/sender']);
         $externalActor->save();
         $localActor->set('following_actors', [$externalActor->id()]);
         $localActor->save();
@@ -259,7 +247,7 @@ class PollTest extends TestCase
         // 4. Vote (Create local reply Note)
         $voteNote = Entry::make()
             ->collection('notes')
-            ->slug('my-vote')
+            ->slug('test-my-vote')
             ->data([
                 'content' => 'Yes',
                 'in_reply_to' => $poll->id(), // Link to Statamic ID of poll
@@ -287,9 +275,9 @@ class PollTest extends TestCase
     public function it_tallies_incoming_vote_note()
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
-        $localActor = Entry::make()->collection('actors')->slug('me')->data(['title' => 'Me']);
+        $localActor = Entry::make()->collection('actors')->slug('test-me')->data(['title' => 'Me']);
         $localActor->save();
-        $externalActor = Entry::make()->collection('actors')->slug('voter')->data(['title' => 'Voter', 'activitypub_id' => 'https://example.com/voter']);
+        $externalActor = Entry::make()->collection('actors')->slug('test-voter')->data(['title' => 'Voter', 'activitypub_id' => 'https://example.com/voter']);
         $externalActor->save();
         $localActor->set('following_actors', [$externalActor->id()]);
         $localActor->save();
@@ -297,7 +285,7 @@ class PollTest extends TestCase
         // 1. Create Local Poll
         $poll = Entry::make()
             ->collection('polls')
-            ->slug('my-poll')
+            ->slug('test-my-poll')
             ->data([
                 'title' => 'My Poll',
                 'content' => 'What is your favorite?',
@@ -342,9 +330,17 @@ class PollTest extends TestCase
         $this->assertEquals(1, $poll->get('voters_count'), 'Should not double-count votes from the same actor');
 
         // 4. Verify Update Activity was generated (by AutoGenerateActivityListener)
-        $updateActivity = Entry::query()->where('collection', 'activities')->where('type', 'Update')->first();
+        $updateActivity = Entry::query()->where('collection', 'activities')
+            ->where('type', 'Update')
+            ->where('slug', 'like', 'activity-%')
+            ->get()
+            ->first(function ($entry) use ($poll) {
+                $object = $entry->get('object');
+                return $object && in_array($poll->id(), (array)$object);
+            });
+            
         $this->assertNotNull($updateActivity, 'An Update activity should have been generated for the poll counts update');
-        $this->assertContains($poll->id(), $updateActivity->get('object'));
+        $this->assertContains($poll->id(), (array)$updateActivity->get('object'));
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

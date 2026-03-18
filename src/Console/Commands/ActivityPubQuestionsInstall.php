@@ -114,7 +114,7 @@ class ActivityPubQuestionsInstall extends Command
 
     protected function configureActivityPubSettings(): void
     {
-        $settingsPath = resource_path('settings/activitypub.yaml');
+        $settingsPath = \Ethernick\ActivityPubCore\Services\ActivityPubUtils::settingsPath();
         $settingsDir = dirname($settingsPath);
 
         if (!File::exists($settingsDir)) {
@@ -141,7 +141,7 @@ class ActivityPubQuestionsInstall extends Command
         }
 
         // Update polls.yaml content collection settings to ensure date: true and route
-        $collectionPath = base_path('content/collections/polls.yaml');
+        $collectionPath = \Ethernick\ActivityPubCore\Services\ActivityPubUtils::collectionPath('polls');
         if (File::exists($collectionPath)) {
             $config = YAML::parse(File::get($collectionPath));
             $config['date'] = true;

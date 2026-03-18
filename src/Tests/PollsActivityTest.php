@@ -10,42 +10,19 @@ class PollsActivityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['statamic.editions.pro' => true]);
+        
+        $this->setupCollections(['actors', 'activities', 'polls']);
 
-        // Write config file expected by listener
-        $path = resource_path('settings/activitypub.yaml');
-        if (!\Statamic\Facades\File::exists(resource_path('settings'))) {
-            \Statamic\Facades\File::makeDirectory(resource_path('settings'));
-        }
-        \Statamic\Facades\Collection::make('actors')->save();
-        \Statamic\Facades\Collection::make('activities')->dated(true)->save();
-        \Statamic\Facades\Collection::make('polls')->dated(true)->save();
-
-        \Statamic\Facades\File::put($path, "polls:\n  type: Question\n  federated: true\n");
-
-        $this->cleanup();
+        // Setup ActivityPub config in sandbox
+        \Statamic\Facades\File::put(
+            \Ethernick\ActivityPubCore\Services\ActivityPubUtils::settingsPath(), 
+            "polls:\n  type: Question\n  federated: true\n"
+        );
     }
 
     protected function tearDown(): void
     {
-        $this->cleanup();
-
-        // Clean up config
-        $path = resource_path('settings/activitypub.yaml');
-        if (\Statamic\Facades\File::exists($path)) {
-            \Statamic\Facades\File::delete($path);
-        }
-
         parent::tearDown();
-    }
-
-    protected function cleanup()
-    {
-        \Statamic\Facades\Entry::query()
-            ->whereIn('collection', ['polls', 'activities', 'actors'])
-            ->get()
-            ->filter(fn($entry) => str_contains($entry->slug(), 'test-poll-gen'))
-            ->each->delete();
     }
 
     public function test_creating_poll_generates_question_activity_summary()
