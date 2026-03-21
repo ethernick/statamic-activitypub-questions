@@ -58,7 +58,7 @@ class ActivityPubQuestionsServiceProvider extends ServiceProvider
         if (is_dir($distDir)) {
             $this->publishes([
                 "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
-            ], 'activitypub-questions');
+            ], 'activitypub');
         }
 
         \Statamic\Statamic::script($packageName, 'cp.js');
