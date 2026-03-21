@@ -9,7 +9,12 @@ export default {
     name: 'InboxNewPoll',
     methods: {
         createPoll() {
-            Statamic.$activitypub.bus.$emit('activitypub:inbox:create-poll');
+            const bus = Statamic.$activitypub.bus;
+            if (typeof bus.emit === 'function') {
+                bus.emit('activitypub:inbox:create-poll');
+            } else {
+                bus.$emit('activitypub:inbox:create-poll');
+            }
         }
     }
 }

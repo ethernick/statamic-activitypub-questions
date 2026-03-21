@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import InboxPollForm from './InboxPollForm.vue';
+import InboxPollForm from './InboxPollForm.v6.vue';
 
 export default {
     name: 'InboxQuestionModals',
@@ -46,12 +46,21 @@ export default {
     },
     mounted() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
-            Statamic.$activitypub.bus.$on('activitypub:inbox:create-poll', this.openPollModal);
+            // Vue 3 compatible event listening if using a mitt-like bus
+            if (typeof Statamic.$activitypub.bus.on === 'function') {
+                Statamic.$activitypub.bus.on('activitypub:inbox:create-poll', this.openPollModal);
+            } else if (typeof Statamic.$activitypub.bus.$on === 'function') {
+                Statamic.$activitypub.bus.$on('activitypub:inbox:create-poll', this.openPollModal);
+            }
         }
     },
-    beforeDestroy() {
+    beforeUnmount() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
-            Statamic.$activitypub.bus.$off('activitypub:inbox:create-poll', this.openPollModal);
+             if (typeof Statamic.$activitypub.bus.off === 'function') {
+                Statamic.$activitypub.bus.off('activitypub:inbox:create-poll', this.openPollModal);
+            } else if (typeof Statamic.$activitypub.bus.$off === 'function') {
+                Statamic.$activitypub.bus.$off('activitypub:inbox:create-poll', this.openPollModal);
+            }
         }
     },
     methods: {

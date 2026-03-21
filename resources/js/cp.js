@@ -1,5 +1,6 @@
 import PollBox from './components/PollBox.vue';
 import InboxNewPoll from './components/InboxNewPoll.vue';
+import InboxQuestionModals from './components/InboxQuestionModals.vue';
 
 const boot = () => {
     if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
@@ -17,9 +18,9 @@ const boot = () => {
             component: InboxQuestionModals,
             priority: 10
         });
+    } else if (typeof Statamic !== 'undefined') {
+        setTimeout(boot, 10);
     }
 };
 
-if (typeof Statamic !== 'undefined') {
-    boot();
-}
+boot();

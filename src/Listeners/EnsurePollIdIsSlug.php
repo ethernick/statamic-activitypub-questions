@@ -40,5 +40,10 @@ class EnsurePollIdIsSlug
         if (is_string($date)) {
             $entry->set('date', \Illuminate\Support\Carbon::parse($date));
         }
+
+        // Default end_time to 7 days if not set
+        if (!$entry->get('end_time')) {
+            $entry->set('end_time', now()->addDays(7)->toIso8601String());
+        }
     }
 }

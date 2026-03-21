@@ -18,10 +18,11 @@ class ActivityPubQuestionsServiceProvider extends ServiceProvider
             ActivityPubTypes::register(
                 'Question',
                 'Question',
-                QuestionController::class,
                 null,
+                QuestionController::class,
                 ['polls'],
-                \Ethernick\ActivityPubQuestions\Types\QuestionPayloadFormatter::class,
+                \Ethernick\ActivityPubQuestions\Http\Handlers\PollStoreHandler::class,
+                \Ethernick\ActivityPubQuestions\Http\Handlers\PollOutboxHandler::class,
                 \Ethernick\ActivityPubQuestions\Jobs\QuestionInboxHandler::class
             );
         }
@@ -49,18 +50,18 @@ class ActivityPubQuestionsServiceProvider extends ServiceProvider
     protected function registerAssets(): void
     {
         $packageName = 'ethernick/activitypub-questions';
+        $version = \Statamic\Statamic::version();
+        $isV6 = version_compare($version, '6.0.0', '>=');
+        $distSubdir = $isV6 ? 'v6' : 'v5';
         
-        foreach (['v5', 'v6'] as $version) {
-            $distDir = __DIR__ . "/../dist/{$version}";
-            if (is_dir($distDir)) {
-                $this->publishes([
-                    "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
-                ], 'activitypub-questions');
-                break; // Use the first one found
-            }
+        $distDir = __DIR__ . "/../dist/{$distSubdir}";
+        if (is_dir($distDir)) {
+            $this->publishes([
+                "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
+            ], 'activitypub-questions');
         }
 
-        Statamic::script($packageName, 'cp');
+        \Statamic\Statamic::script($packageName, 'cp.js');
     }
 
     public function register()

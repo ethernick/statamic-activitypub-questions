@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build:v5": "cross-env BUILD_ADDON=true VUE_VERSION=2 vite build",
-    "build": "npm run build:v5",
+    "build:v6": "./bin/build-v6.sh",
+    "build": "npm run build:v6 && npm run build:v5",
     "production": "npm run build"
   },
   "devDependencies": {

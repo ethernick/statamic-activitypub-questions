@@ -7,8 +7,24 @@ const vueVersion = process.env.VUE_VERSION || '2';
 const isVue2 = vueVersion === '2';
 const distSubdir = isVue2 ? 'v5' : 'v6';
 
+// Custom plugin to resolve version-specific component overrides
+const versionResolverPlugin = () => ({
+    name: 'version-resolver',
+    enforce: 'pre',
+    async resolveId(source, importer) {
+        if (source.endsWith('.vue') && importer) {
+            const versionExt = isVue2 ? '.v5.vue' : '.v6.vue';
+            const versionedPath = source.replace(/\.vue$/, versionExt);
+            const resolution = await this.resolve(versionedPath, importer, { skipSelf: true });
+            if (resolution) return resolution;
+        }
+        return null;
+    }
+});
+
 export default defineConfig({
     plugins: [
+        versionResolverPlugin(),
         isVue2 ? vue2() : vue3(),
     ],
     build: {
