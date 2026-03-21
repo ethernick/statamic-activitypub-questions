@@ -74,13 +74,15 @@ class PollVoteListener
             return;
         }
 
-        // Match content
+        // Match content or name (name is often used for votes)
         $content = strip_tags((string) $voteNote->get('content'));
+        $name = (string) $voteNote->get('title'); // Statamic maps AP 'name' to 'title'
         $options = $poll->get('options', []);
         $matched = false;
 
         foreach ($options as &$option) {
-            if (trim(strtolower($option['name'])) === trim(strtolower($content))) {
+            $optName = trim(strtolower($option['name']));
+            if ($optName === trim(strtolower($content)) || $optName === trim(strtolower($name))) {
                 $option['count'] = ($option['count'] ?? 0) + 1;
                 $matched = true;
                 break;
