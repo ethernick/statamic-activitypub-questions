@@ -32,3 +32,8 @@ To successfully extract polls from Core, the following architectural gaps must b
 - **Questions Addon**: Created `QuestionPayloadFormatter`, `QuestionInboxHandler`, and `PollBox.vue`.
 - **Outcome**: The `Question` type is now fully modular. Core no longer contains poll-specific logic, and the Questions addon handles its own UI and logic via hooks.
 
+### 2026-03-22: Poll Federation & Vote Tallying
+- **Lifecycle Fixes**: Resolved issues with non-unique poll IDs and outbox generation.
+- **Vote Tallying**: Implemented robust vote matching that resolve local polls via URI/Slug parsing. Added fallback logic to extract vote names from raw ActivityPub JSON to avoid Statamic title UUID collisions.
+- **Circular Verification**: Confirmed that vote tallies trigger `Update` activities to synchronize counts across the Fediverse.
+

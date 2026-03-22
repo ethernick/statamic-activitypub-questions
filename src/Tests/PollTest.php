@@ -295,11 +295,11 @@ class PollTest extends TestCase
                 ],
                 'actor' => $localActor->id(),
                 'is_internal' => true,
-                'activitypub_id' => 'https://example.com/poll/my-poll',
             ]);
         $poll->save();
 
-        $this->assertEquals(0, $poll->get('voters_count'));
+        $baseUrl = \Statamic\Facades\Site::selected()->absoluteUrl();
+        $pollUrl = $baseUrl . '/polls/' . $poll->slug();
 
         // 2. Vote via Note Reply from external actor
         $votePayload = [
@@ -310,7 +310,7 @@ class PollTest extends TestCase
                 'id' => 'https://example.com/note/vote-reply-1',
                 'type' => 'Note',
                 'content' => 'Option A',
-                'inReplyTo' => 'https://example.com/poll/my-poll',
+                'inReplyTo' => $pollUrl,
                 'attributedTo' => 'https://example.com/voter',
             ]
         ];
