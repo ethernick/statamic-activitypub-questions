@@ -25,18 +25,23 @@ class PollVoteListener
             return;
         }
 
+        Log::info("PollVoteListener: Incoming external note {$entry->id()} is a reply to {$inReplyTo}");
+
         // Resolve parent poll
         $poll = $this->resolvePoll($inReplyTo);
         if (!$poll) {
+            Log::info("PollVoteListener: Failed to resolve poll for {$inReplyTo}");
             return;
         }
 
+        Log::info("PollVoteListener: Successfully resolved poll {$poll->id()}");
         // 3. Match content to options
         $this->processVote($entry, $poll);
     }
 
     protected function resolvePoll(string $urlOrId): ?\Statamic\Entries\Entry
     {
+        Log::info("PollVoteListener: Attempting to resolve poll: {$urlOrId}");
         // Try direct ID
         $poll = Entry::find($urlOrId);
         if ($poll && $poll->collection()->handle() === 'polls') {
