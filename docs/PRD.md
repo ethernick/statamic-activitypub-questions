@@ -37,3 +37,24 @@ To successfully extract polls from Core, the following architectural gaps must b
 - **Vote Tallying**: Implemented robust vote matching that resolve local polls via URI/Slug parsing. Added fallback logic to extract vote names from raw ActivityPub JSON to avoid Statamic title UUID collisions.
 - **Circular Verification**: Confirmed that vote tallies trigger `Update` activities to synchronize counts across the Fediverse.
 
+## 5. Future Roadmap / UI Enhancements
+Based on recent discovery notes, the following enhancements are planned for the Questions addon:
+
+### Better Inbox UI for Polls
+- Needs a visual way to see results directly in the Inbox feed.
+- Add a small bar chart icon that, when clicked, reveals a horizontal bar chart showing percentages of voted options.
+
+### Dedicated "Polls" Analytics Section
+- A new section under the "ActivityPub" CP nav menu (matching the chart outline icon style).
+- Displays a list of `is_internal` (local) polls.
+- Detailed analytics per poll:
+  - **Reach**: Sum of my followers + booster followers (an inaccurate but close enough metric).
+  - **Results**: Bar chart of the current vote distribution.
+  - **Timeline**: Cumulative line graph tracking when votes came in and how the tally increased over time.
+
+### Public Frontend Poll Page
+- Allow the public to vote on polls directly on the web, not just through Fediverse platforms.
+- A public-facing form to submit a vote.
+- Submissions will increment the vote tally and trigger an ActivityPub `Update` activity.
+- The poll page should include oEmbed/OpenGraph/Social Card tags for rich sharing when linked elsewhere.
+
