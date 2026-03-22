@@ -55,9 +55,18 @@ class PollVoteListener
             if (\Illuminate\Support\Str::startsWith($urlOrId, $baseUrl)) {
                 $uri = str_replace($baseUrl, '', $urlOrId);
                 $uri = '/' . ltrim($uri, '/');
-                $localEntry = Entry::findByUri($uri, \Statamic\Facades\Site::selected()->handle());
-                if ($localEntry && $localEntry->collection()->handle() === 'polls') {
-                    $poll = $localEntry;
+                
+                // Parse /polls/{slug} manually to bypass Stache routing limitations
+                $parts = explode('/', trim($uri, '/'));
+                if (count($parts) === 2 && $parts[0] === 'polls') {
+                    $poll = Entry::query()->where('collection', 'polls')->where('slug', $parts[1])->first();
+                }
+
+                if (!$poll) {
+                    $localEntry = Entry::findByUri($uri, \Statamic\Facades\Site::selected()->handle());
+                    if ($localEntry && $localEntry->collection()->handle() === 'polls') {
+                        $poll = $localEntry;
+                    }
                 }
             }
         }
@@ -90,6 +99,16 @@ class PollVoteListener
         // Match content or name (name is often used for votes)
         $content = strip_tags((string) $voteNote->get('content'));
         $name = (string) $voteNote->get('title'); // Statamic maps AP 'name' to 'title'
+        
+        // If title ended up as a UUID (Statamic fallback), check the raw JSON
+        $apJson = $voteNote->get('activitypub_json');
+        if ($apJson) {
+            $apData = json_decode($apJson, true);
+            if ($apData && isset($apData['name'])) {
+                $name = $apData['name'];
+            }
+        }
+
         $options = $poll->get('options', []);
         $matched = false;
 
