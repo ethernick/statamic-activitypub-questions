@@ -49,6 +49,19 @@ class PollVoteListener
             ->where('activitypub_id', $urlOrId)
             ->first();
 
+        if (!$poll) {
+            // Try resolving local URI if it's a local poll
+            $baseUrl = \Statamic\Facades\Site::selected()->absoluteUrl();
+            if (\Illuminate\Support\Str::startsWith($urlOrId, $baseUrl)) {
+                $uri = str_replace($baseUrl, '', $urlOrId);
+                $uri = '/' . ltrim($uri, '/');
+                $localEntry = Entry::findByUri($uri, \Statamic\Facades\Site::selected()->handle());
+                if ($localEntry && $localEntry->collection()->handle() === 'polls') {
+                    $poll = $localEntry;
+                }
+            }
+        }
+
         return $poll;
     }
 
