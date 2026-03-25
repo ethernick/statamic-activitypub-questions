@@ -1,5 +1,5 @@
 <template>
-    <inbox-stack :open="open" @closed="$emit('close')" title="Create Poll">
+    <inbox-stack :open="open" @closed="$emit('close')" :title="isEditing ? 'Edit Poll' : 'Create Poll'">
         <div class="mb-5">
             <label class="block text-sm font-bold mb-2">Post As</label>
             <select v-model="form.actor" class="input-text w-full">
@@ -72,7 +72,7 @@
         <template #footer-end>
             <button class="relative inline-flex items-center justify-center whitespace-nowrap shrink-0 font-medium antialiased cursor-pointer no-underline disabled:[&_svg]:opacity-30 disabled:cursor-not-allowed [&_svg]:shrink-0 dark:[&_svg]:text-white bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 shadow-sm px-4 h-10 text-sm rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700" @click="$emit('close')">Cancel</button>
             <button class="relative inline-flex items-center justify-center whitespace-nowrap shrink-0 font-medium antialiased cursor-pointer no-underline disabled:[&_svg]:opacity-30 disabled:cursor-not-allowed [&_svg]:shrink-0 dark:[&_svg]:text-white bg-linear-to-b from-primary/90 to-primary hover:bg-primary-hover text-white disabled:opacity-60 disabled:text-white dark:disabled:text-white border border-primary-border shadow-ui-md inset-shadow-2xs inset-shadow-white/25 disabled:inset-shadow-none dark:disabled:inset-shadow-none [&_svg]:text-white [&_svg]:opacity-60 px-4 h-10 text-sm gap-2 rounded-lg" @click="submitForm" :disabled="loading">
-                {{ loading ? 'Creating...' : 'Create Poll' }}
+                {{ loading ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Poll') }}
             </button>
         </template>
     </inbox-stack>
@@ -108,6 +108,10 @@ export default {
         searchTermsUrl: {
             type: String,
             default: null
+        },
+        isEditing: {
+            type: Boolean,
+            default: false
         }
     },
     data() {

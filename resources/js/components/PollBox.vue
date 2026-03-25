@@ -144,10 +144,11 @@ export default {
             this.isVoting = true;
 
             // Direct axios call if URL is available
-            if (this.storeNoteUrl) {
+            const voteUrl = this.note.vote_url;
+            if (voteUrl) {
                 const actorId = this.actors && this.actors[0] ? this.actors[0].id : null;
                 
-                this.$axios.post(this.storeNoteUrl + '/vote', {
+                this.$axios.post(voteUrl, {
                     poll: note.id,
                     choices: votes,
                     actor: actorId

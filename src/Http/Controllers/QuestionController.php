@@ -146,6 +146,66 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         return false;
     }
 
+    public function vote(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'poll' => 'required|string',
+            'choices' => 'required|array',
+            'actor' => 'required|string',
+        ]);
+
+        $pollId = $request->input('poll');
+        $choices = $request->input('choices');
+        $actorId = $request->input('actor');
+
+        $poll = Entry::find($pollId);
+        if (!$poll || $poll->collection()->handle() !== 'polls') {
+            return response()->json(['error' => 'Poll not found'], 404);
+        }
+
+        $actor = Entry::find($actorId);
+        if (!$actor || $actor->collection()->handle() !== 'actors') {
+            return response()->json(['error' => 'Actor not found'], 404);
+        }
+
+        // Check if already voted
+        $alreadyVoted = Entry::query()
+            ->where('collection', 'notes')
+            ->where('in_reply_to', $poll->id())
+            ->where('actor', $actor->id())
+            ->exists();
+
+        if ($alreadyVoted) {
+            return response()->json(['error' => 'Already voted'], 422);
+        }
+
+        // Create a local vote note
+        $voteNote = Entry::make()
+            ->collection('notes')
+            ->data([
+                'content' => implode(', ', $choices),
+                'in_reply_to' => $poll->id(),
+                'actor' => $actor->id(),
+                'is_internal' => true,
+            ]);
+        $voteNote->save();
+
+        // Update poll counts
+        $options = $poll->get('options', []);
+        foreach ($choices as $choice) {
+            foreach ($options as &$opt) {
+                if ($opt['name'] === $choice) {
+                    $opt['count'] = ($opt['count'] ?? 0) + 1;
+                }
+            }
+        }
+        $poll->set('options', $options);
+        $poll->set('voters_count', ($poll->get('voters_count', 0) + 1));
+        $poll->save();
+
+        return response()->json(['success' => true]);
+    }
+
     // Logic migrated from NoteController/InboxHandler
     protected function createPollEntry($object, $authorActor)
     {

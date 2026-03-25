@@ -35,6 +35,23 @@ class PollVoteListener
         }
 
         Log::info("PollVoteListener: Successfully resolved poll {$poll->id()}");
+        
+        // Check if poll is closed
+        $isClosed = $poll->get('closed') === true;
+        if (!$isClosed && $endTime = $poll->get('end_time')) {
+            if (\Illuminate\Support\Carbon::parse($endTime)->isPast()) {
+                $isClosed = true;
+                $poll->set('closed', true);
+                $poll->save();
+                Log::info("PollVoteListener: Poll {$poll->id()} expired and has been marked as closed.");
+            }
+        }
+
+        if ($isClosed) {
+            Log::info("PollVoteListener: Rejecting vote for closed poll {$poll->id()}");
+            return;
+        }
+
         // 3. Match content to options
         $this->processVote($entry, $poll);
     }

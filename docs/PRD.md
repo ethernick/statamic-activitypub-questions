@@ -37,6 +37,9 @@ To successfully extract polls from Core, the following architectural gaps must b
 - **Vote Tallying**: Implemented robust vote matching that resolve local polls via URI/Slug parsing. Added fallback logic to extract vote names from raw ActivityPub JSON to avoid Statamic title UUID collisions.
 - **Circular Verification**: Confirmed that vote tallies trigger `Update` activities to synchronize counts across the Fediverse.
 
+### 2026-03-25: Navigation Migration
+- Refactored the addon to use the new centralized `ActivityPubNav` service from Core. Migrated the "Polls" menu item to the registry with priority `20`, ensuring it correctly appears after "Inbox" and resolving layout conflicts between addons.
+
 ## 5. Future Roadmap / UI Enhancements
 Based on recent discovery notes, the following enhancements are planned for the Questions addon:
 
@@ -47,10 +50,14 @@ Based on recent discovery notes, the following enhancements are planned for the 
 ### Dedicated "Polls" Analytics Section
 - A new section under the "ActivityPub" CP nav menu (matching the chart outline icon style).
 - Displays a list of `is_internal` (local) polls.
-- Detailed analytics per poll:
-  - **Reach**: Sum of my followers + booster followers (an inaccurate but close enough metric).
-  - **Results**: Bar chart of the current vote distribution.
-  - **Timeline**: Cumulative line graph tracking when votes came in and how the tally increased over time.
+- **Rollup Metrics**: Total active polls, total collected votes.
+- **Trend Chart**: Cumulative line chart of vote counts over time, grouped by poll.
+- **Masonry Layout**: Cards for each poll showing the question and a horizontal bar chart of results.
+- **Deep-Dive Drawer**: Clicking a card opens a drawer with:
+  - Percentage and count per option.
+  - Individual poll trend line.
+  - Voter list (if available).
+- **Inbox Integration**: A "chart" icon in the Inbox Note content that opens the corresponding Poll Drawer.
 
 ### Public Frontend Poll Page
 - Allow the public to vote on polls directly on the web, not just through Fediverse platforms.

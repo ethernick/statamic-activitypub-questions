@@ -4,6 +4,7 @@
             :open="isCreatingPoll"
             :form="newPoll"
             :actors="actors"
+            :is-editing="!!editingPollId"
             :loading="creating"
             :hashtag-enabled="hashtagEnabled"
             :hashtag-taxonomy="hashtagTaxonomy"
@@ -11,16 +12,27 @@
             @close="closePollModal"
             @submit="submitPoll"
         />
+
+        <poll-drawer 
+            ref="drawer" 
+            :poll="viewingPoll" 
+            :metrics-url="pollMetricsUrl"
+            :voters-url="pollVotersUrl"
+            :close-url="pollCloseUrl"
+            @closed="viewingPoll = null"
+        />
     </div>
 </template>
 
 <script>
 import InboxPollForm from './InboxPollForm.v6.vue';
+import PollDrawer from './PollDrawer.vue';
 
 export default {
     name: 'InboxQuestionModals',
     components: {
-        InboxPollForm
+        InboxPollForm,
+        PollDrawer
     },
     props: {
         actors: Array,
@@ -37,11 +49,23 @@ export default {
                 actor: null,
                 content: '',
                 multiple_choice: false,
-                duration: 10080,
                 date: this.getInitialDate(),
                 options: ['', ''],
                 tags: []
-            }
+            },
+            editingPollId: null,
+            viewingPoll: null,
+        }
+    },
+    computed: {
+        pollMetricsUrl() {
+            return (Statamic.cpRoot || '/cp') + '/activitypub/polls/metrics';
+        },
+        pollVotersUrl() {
+            return (Statamic.cpRoot || '/cp') + '/activitypub/polls/ID_PLACEHOLDER/voters';
+        },
+        pollCloseUrl() {
+            return (Statamic.cpRoot || '/cp') + '/activitypub/polls/ID_PLACEHOLDER/close';
         }
     },
     mounted() {
@@ -49,8 +73,12 @@ export default {
             // Vue 3 compatible event listening if using a mitt-like bus
             if (typeof Statamic.$activitypub.bus.on === 'function') {
                 Statamic.$activitypub.bus.on('activitypub:inbox:create-poll', this.openPollModal);
+                Statamic.$activitypub.bus.on('activitypub:inbox:edit-poll', this.openEditPollModal);
+                Statamic.$activitypub.bus.on('activitypub-open-poll-drawer', this.openViewPollDrawer);
             } else if (typeof Statamic.$activitypub.bus.$on === 'function') {
                 Statamic.$activitypub.bus.$on('activitypub:inbox:create-poll', this.openPollModal);
+                Statamic.$activitypub.bus.$on('activitypub:inbox:edit-poll', this.openEditPollModal);
+                Statamic.$activitypub.bus.$on('activitypub-open-poll-drawer', this.openViewPollDrawer);
             }
         }
     },
@@ -58,12 +86,26 @@ export default {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
              if (typeof Statamic.$activitypub.bus.off === 'function') {
                 Statamic.$activitypub.bus.off('activitypub:inbox:create-poll', this.openPollModal);
+                Statamic.$activitypub.bus.off('activitypub:inbox:edit-poll', this.openEditPollModal);
+                Statamic.$activitypub.bus.off('activitypub-open-poll-drawer', this.openViewPollDrawer);
             } else if (typeof Statamic.$activitypub.bus.$off === 'function') {
                 Statamic.$activitypub.bus.$off('activitypub:inbox:create-poll', this.openPollModal);
+                Statamic.$activitypub.bus.$off('activitypub:inbox:edit-poll', this.openEditPollModal);
+                Statamic.$activitypub.bus.$off('activitypub-open-poll-drawer', this.openViewPollDrawer);
             }
         }
     },
     methods: {
+        openViewPollDrawer(note) {
+            this.viewingPoll = note;
+            this.$nextTick(() => {
+                if (this.$refs.drawer && typeof this.$refs.drawer.open === 'function') {
+                    this.$refs.drawer.open();
+                } else if (this.$refs.drawer) {
+                    this.$refs.drawer.isOpen = true;
+                }
+            });
+        },
         getInitialDate() {
             const now = new Date();
             // Default to 7 days from now
@@ -73,6 +115,7 @@ export default {
         },
         openPollModal() {
             this.isCreatingPoll = true;
+            this.editingPollId = null;
             this.newPoll = {
                 actor: this.actors[0]?.id || null,
                 content: '',
@@ -83,8 +126,33 @@ export default {
                 tags: []
             };
         },
+        openEditPollModal(poll) {
+            this.isCreatingPoll = true;
+            this.editingPollId = poll.id;
+            
+            // Extract options and info from the poll safely
+            let json = {};
+            if (poll.activitypub_json) {
+                json = typeof poll.activitypub_json === 'string' 
+                    ? JSON.parse(poll.activitypub_json || '{}') 
+                    : (poll.activitypub_json || {});
+            }
+            
+            const oneOf = json.oneOf || json.anyOf || [];
+
+            this.newPoll = {
+                actor: poll.actor.id,
+                content: poll.content_raw || poll.content || json.content || '',
+                multiple_choice: !!json.anyOf,
+                duration: 10080, // We can calculate this from endTime if needed
+                date: poll.end_time || this.getInitialDate(),
+                options: oneOf.map(o => (o.name || o)), // Handling if string options
+                tags: poll.tags || []
+            };
+        },
         closePollModal() {
             this.isCreatingPoll = false;
+            this.editingPollId = null;
         },
         submitPoll() {
             if (this.creating) return;
@@ -107,7 +175,13 @@ export default {
             }
 
             this.creating = true;
-            this.$axios.post(this.storePollUrl, {
+
+            const method = this.editingPollId ? 'put' : 'post';
+            const url = this.editingPollId 
+                ? cp_url(`activitypub/polls/${this.editingPollId}`) 
+                : this.storePollUrl;
+
+            this.$axios[method](url, {
                 actor: this.newPoll.actor,
                 content: this.newPoll.content,
                 options: opts,

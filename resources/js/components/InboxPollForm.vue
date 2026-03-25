@@ -1,5 +1,5 @@
 <template>
-    <inbox-stack :open="open" @closed="$emit('close')" title="Create Poll">
+    <inbox-stack :open="open" @closed="$emit('close')" :title="isEditing ? 'Edit Poll' : 'Create Poll'">
         <div class="mb-5">
             <label class="block text-sm font-bold mb-2">Post As</label>
             <select v-model="form.actor" class="input-text w-full">
@@ -71,8 +71,8 @@
 
         <template #footer-end>
             <button class="btn" @click="$emit('close')">Cancel</button>
-            <button class="btn-primary" @click="submitForm" :disabled="loading">
-                {{ loading ? 'Creating...' : 'Create Poll' }}
+            <button class="btn-primary ml-2" @click="submitForm" :disabled="loading">
+                {{ loading ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Poll') }}
             </button>
         </template>
     </inbox-stack>
@@ -108,6 +108,10 @@ export default {
         searchTermsUrl: {
             type: String,
             default: null
+        },
+        isEditing: {
+            type: Boolean,
+            default: false
         }
     },
     data() {
