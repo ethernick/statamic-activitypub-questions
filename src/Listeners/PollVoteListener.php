@@ -155,7 +155,8 @@ class PollVoteListener
             // which will send an Update:Question activity to followers.
             $poll->save();
 
-            Log::info("PollVoteListener: Tallied vote for option '{$content}' on poll {$poll->id()} by actor {$actorId}");
+            $matchedValue = !empty($name) ? $name : $content;
+            Log::info("PollVoteListener: Tallied vote for option '{$matchedValue}' on poll {$poll->id()} by actor {$actorId}");
         } else {
             Log::info("PollVoteListener: Note content '{$content}' did not match any options for poll {$poll->id()}");
         }
