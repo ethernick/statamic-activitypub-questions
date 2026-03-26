@@ -1,6 +1,6 @@
-# WIP: ActivityPub Polls for Statamic
+# ActivityPub Polls for Statamic
 
-![Build: TBD](https://img.shields.io/badge/build-FAIL-red?style=flat) ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat) ![Version: WIP](https://img.shields.io/badge/version-alpha-yellow?style=flat)
+![Build: Pass](https://img.shields.io/badge/build-PASS-yellow?style=flat) ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat) ![Version: 0.0.1](https://img.shields.io/badge/version-0.0.1-orange?style=flat)
 
 An ActivityPub Core Extention to add federated polls to Statamic
 
