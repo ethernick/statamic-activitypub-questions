@@ -1,19 +1,19 @@
 import PollDashboard from './components/PollDashboard.vue';
-import PollDrawer from './components/PollDrawer.vue';
+import PollStack from './components/PollStack.vue';
 import PollInboxAction from './components/PollInboxAction.vue';
 import PollBox from './components/PollBox.vue';
 import InboxNewPoll from './components/InboxNewPoll.vue';
-import InboxQuestionModals from './components/InboxQuestionModals.vue';
+import PollInboxModals from './components/PollInboxModals.vue';
 
 const boot = () => {
     if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
         
         Statamic.booting(() => {
             Statamic.$components.register('poll-dashboard', PollDashboard);
-            Statamic.$components.register('poll-drawer', PollDrawer);
+            Statamic.$components.register('poll-stack', PollStack);
         });
 
-        Statamic.$activitypub.hooks.register('inbox-note-content', {
+        Statamic.$activitypub.hooks.register('inbox-activity-Question', {
             component: PollBox,
             priority: 10
         });
@@ -24,7 +24,7 @@ const boot = () => {
         });
 
         Statamic.$activitypub.hooks.register('inbox-modals', {
-            component: InboxQuestionModals,
+            component: PollInboxModals,
             priority: 10
         });
 

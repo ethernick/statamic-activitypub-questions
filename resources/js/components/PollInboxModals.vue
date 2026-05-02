@@ -13,7 +13,7 @@
             @submit="submitPoll"
         />
 
-        <poll-drawer 
+        <poll-stack 
             ref="drawer" 
             :poll="viewingPoll" 
             :metrics-url="pollMetricsUrl"
@@ -26,13 +26,13 @@
 
 <script>
 import InboxPollForm from './InboxPollForm.vue';
-import PollDrawer from './PollDrawer.vue';
+import PollStack from './PollStack.vue';
 
 export default {
-    name: 'InboxQuestionModals',
+    name: 'PollInboxModals',
     components: {
         InboxPollForm,
-        PollDrawer
+        PollStack
     },
     props: {
         actors: Array,

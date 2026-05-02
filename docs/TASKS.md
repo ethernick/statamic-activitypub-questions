@@ -41,4 +41,6 @@
 - [x] Integrate "chart" icon hook in Inbox to open Poll Drawer <!-- id: 41 -->
 - [x] Ensure poll-related activities are excluded from automatic cleanup/purging <!-- id: 42 -->
 - [x] Refine SVG icon for menu and inbox to match natural Statamic CP aesthetic (flat, outlined bar chart). <!-- id: 43 -->
+- [x] Rename `PollDrawer.vue` to `PollStack.vue` and update all imports. <!-- id: 44 -->
+- [x] Treat `Question` as a Major Activity in the inbox foundation. <!-- id: 45 -->
 

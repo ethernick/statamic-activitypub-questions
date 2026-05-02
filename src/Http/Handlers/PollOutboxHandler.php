@@ -20,7 +20,7 @@ class PollOutboxHandler implements OutboxHandlerInterface
             $data['closed'] = Carbon::parse($entry->get('date'))->addDays(1)->toIso8601String();
         }
 
-        $data['oneOf'] = collect($entry->get('options', []))->map(function ($option) {
+        $options = collect($entry->get('options', []))->map(function ($option) {
             return [
                 'type' => 'Note',
                 'name' => $option['name'],
@@ -30,6 +30,12 @@ class PollOutboxHandler implements OutboxHandlerInterface
                 ]
             ];
         })->all();
+
+        if ($entry->get('multiple_choice')) {
+            $data['anyOf'] = $options;
+        } else {
+            $data['oneOf'] = $options;
+        }
 
         return $data;
     }

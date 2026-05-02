@@ -16,6 +16,7 @@ export default {
     props: ['note'],
     computed: {
         isPoll() {
+            if (!this.note) return false;
             return this.note.type === 'question' || 
                    (this.note.activitypub_json && this.note.activitypub_json.includes('"type":"Question"'));
         }

@@ -82,7 +82,7 @@
             </div>
         </div>
 
-        <poll-drawer 
+        <poll-stack 
             ref="drawer" 
             :poll="selectedPoll" 
             :actors="actors"
@@ -98,13 +98,13 @@
 
 <script>
 import PollCard from './PollCard.vue';
-import PollDrawer from './PollDrawer.vue';
+import PollStack from './PollStack.vue';
 import PollTrendChart from './PollTrendChart.vue';
 
 export default {
     components: {
         PollCard,
-        PollDrawer,
+        PollStack,
         PollTrendChart
     },
     props: {

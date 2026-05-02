@@ -32,25 +32,20 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
                 'Question',
                 'Question',
                 null,
-                QuestionController::class ,
-            ['polls'],
-                \Ethernick\ActivityPubQuestions\Http\Handlers\PollStoreHandler::class ,
-                \Ethernick\ActivityPubQuestions\Http\Handlers\PollOutboxHandler::class ,
+                QuestionController::class,
+                ['polls'],
+                \Ethernick\ActivityPubQuestions\Http\Handlers\PollStoreHandler::class,
+                \Ethernick\ActivityPubQuestions\Http\Handlers\PollOutboxHandler::class,
                 \Ethernick\ActivityPubQuestions\Jobs\QuestionInboxHandler::class
             );
 
             $this->registerInboxHooks();
+            $this->registerStoreHooks();
         }
 
         $this->registerNav();
 
         $this->registerAssets();
-
-        // Register Events
-        \Illuminate\Support\Facades\Event::listen(
-            \Statamic\Events\EntrySaving::class ,
-            \Ethernick\ActivityPubQuestions\Listeners\EnsurePollIdIsSlug::class
-        );
 
         \Illuminate\Support\Facades\Event::listen(
             \Statamic\Events\EntrySaved::class ,
@@ -151,6 +146,7 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
                 return;
 
             $data['type'] = 'question';
+            $data['activity_type'] = 'Question';
             $data['options'] = $entry->get('options', []);
             $data['voters_count'] = (int)$entry->get('voters_count', 0);
             $data['end_time'] = $entry->get('end_time');
@@ -171,6 +167,42 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
         });
     }
 
+    protected function registerStoreHooks(): void
+    {
+        ActivityPubTypes::registerStoreHook(function ($entry) {
+            if ($entry->collectionHandle() !== 'polls') {
+                return;
+            }
+
+            // Ensure ID exists
+            if (!$entry->id()) {
+                $entry->id((string) \Illuminate\Support\Str::uuid());
+            }
+
+            // Ensure slug and title match ID (Note-like behavior)
+            if ($entry->slug() !== $entry->id()) {
+                $entry->slug($entry->id());
+            }
+            if ($entry->get('title') !== $entry->id()) {
+                $entry->set('title', $entry->id());
+            }
+
+            // Normalize dates
+            $date = $entry->get('date');
+            if (is_string($date)) {
+                $entry->set('date', \Illuminate\Support\Carbon::parse($date));
+            }
+
+            // Default poll fields
+            if (!$entry->get('end_time')) {
+                $entry->set('end_time', now()->addDays(7)->toIso8601String());
+            }
+            if (!$entry->has('closed')) {
+                $entry->set('closed', false);
+            }
+        });
+    }
+
     protected function registerAssets(): void
     {
         $packageName = 'ethernick/activitypub-questions';
@@ -182,7 +214,7 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
         if (is_dir($distDir)) {
             $this->publishes([
                 "$distDir/js/cp.js" => public_path("vendor/$packageName/js/cp.js"),
-            ], 'activitypub');
+            ], 'activitypub-questions');
         }
 
         \Statamic\Statamic::script($packageName, 'cp.js');

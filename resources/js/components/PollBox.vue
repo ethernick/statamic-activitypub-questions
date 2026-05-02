@@ -1,5 +1,5 @@
 <template>
-    <div v-if="note.type === 'question'" class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+    <div v-if="note && note.type === 'question'" class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
         <div class="flex justify-between items-center mb-2">
             <span class="text-xs font-bold uppercase text-gray-500 flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
