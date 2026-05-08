@@ -18,13 +18,20 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
         \Ethernick\ActivityPubQuestions\Console\Commands\ActivityPubPollsClose::class ,
     ];
 
+    protected $tags = [
+        'activitypub_poll' => \Ethernick\ActivityPubQuestions\Tags\ActivitypubPoll::class,
+    ];
+
     protected $routes = [
         'cp' => __DIR__ . '/routes/cp.php',
+        'web' => __DIR__ . '/routes/web.php',
     ];
 
     public function boot(): void
     {
         parent::boot();
+
+        // Register main tag
 
         // Register ActivityPub Type
         if (class_exists(ActivityPubTypes::class)) {
@@ -206,7 +213,7 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
     protected function registerAssets(): void
     {
         $packageName = 'ethernick/activitypub-questions';
-        $version = \Statamic\Statamic::version();
+        $version = config('statamic.system.version') ?: (class_exists(\Statamic\Statamic::class) ? \Statamic\Statamic::version() : '6.13.0');
         $isV6 = version_compare($version, '6.0.0', '>=');
         $distSubdir = $isV6 ? 'v6' : 'v5';
 
@@ -222,6 +229,6 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
 
     public function register()
     {
-    //
+        parent::register();
     }
 }

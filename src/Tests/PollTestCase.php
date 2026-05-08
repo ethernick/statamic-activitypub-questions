@@ -7,21 +7,23 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\User;
 use Ethernick\ActivityPubCore\Jobs\InboxHandler;
 
-class PollTest extends TestCase
+class PollTestCase extends TestCase
 {
     public function setUp(): void
     {
         parent::setUp();
-        
+
         $this->setupCollections(['actors', 'activities', 'notes', 'polls']);
 
         // Setup ActivityPub config in sandbox
         \Statamic\Facades\File::put(
-            \Ethernick\ActivityPubCore\Services\ActivityPubUtils::settingsPath(), 
+            \Ethernick\ActivityPubCore\Services\ActivityPubUtils::settingsPath(),
             "polls:\n  type: Question\n  federated: true\nnotes:\n  type: Note\n  federated: true\n"
         );
 
         \Statamic\Facades\Blink::flush();
+
+        \Statamic\Statamic::tag('activitypub_pull', \Ethernick\ActivityPubQuestions\Tags\ActivitypubPoll::class);
     }
 
     public function tearDown(): void
@@ -323,7 +325,7 @@ class PollTest extends TestCase
         $this->assertEquals(1, $poll->get('voters_count'));
         $options = $poll->get('options');
         $this->assertEquals(1, $options[0]['count']);
-        
+
         // Assert Deduplication
         $handler->handle($votePayload, $localActor, $externalActor);
         $poll = $poll->fresh();
@@ -336,18 +338,18 @@ class PollTest extends TestCase
             ->get()
             ->first(function ($entry) use ($poll) {
                 $object = $entry->get('object');
-                return $object && in_array($poll->id(), (array)$object);
+                return $object && in_array($poll->id(), (array) $object);
             });
-            
+
         $this->assertNotNull($updateActivity, 'An Update activity should have been generated for the poll counts update');
-        $this->assertContains($poll->id(), (array)$updateActivity->get('object'));
+        $this->assertContains($poll->id(), (array) $updateActivity->get('object'));
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
     public function it_defaults_title_to_id()
     {
         $this->actingAs(User::make()->id('admin')->makeSuper()->save());
-        
+
         $poll = Entry::make()
             ->collection('polls')
             ->slug('slug-will-be-overwritten')
@@ -355,10 +357,10 @@ class PollTest extends TestCase
                 'content' => '', // Empty content
                 'options' => [['name' => 'A', 'count' => 0]],
             ]);
-        
+
         // Saving should trigger EnsurePollIdIsSlug listener
         $poll->save();
-        
+
         $this->assertNotNull($poll->id());
         $this->assertEquals($poll->id(), $poll->slug(), 'Slug should be the UUID');
         $this->assertEquals($poll->id(), $poll->get('title'), 'Title should default to the UUID');
