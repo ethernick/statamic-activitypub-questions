@@ -258,7 +258,7 @@ class PollTestCase extends TestCase
                 // $actors comes from User::current()->activityPubActors().
                 // We need to ensure localActor is returned by that.
                 // In Setup, we set 'user' => 'admin'.
-                'actor' => $localActor->id(),
+                'actor' => [$localActor->id()],
                 'date' => now(),
             ]);
         $voteNote->save();

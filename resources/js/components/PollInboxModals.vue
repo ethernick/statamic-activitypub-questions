@@ -71,6 +71,12 @@ export default {
     },
     mounted() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
+            // Standardized events
+            Statamic.$activitypub.bus.on('activitypub:polls:open-create', this.openPollModal);
+            Statamic.$activitypub.bus.on('activitypub:polls:open-edit', this.openEditPollModal);
+            Statamic.$activitypub.bus.on('activitypub:polls:open-drawer', this.openViewPollDrawer);
+
+            // Legacy backward-compatible events
             Statamic.$activitypub.bus.on('activitypub:inbox:create-poll', this.openPollModal);
             Statamic.$activitypub.bus.on('activitypub:inbox:edit-poll', this.openEditPollModal);
             Statamic.$activitypub.bus.on('activitypub-open-poll-drawer', this.openViewPollDrawer);
@@ -78,6 +84,10 @@ export default {
     },
     beforeDestroy() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
+            Statamic.$activitypub.bus.off('activitypub:polls:open-create', this.openPollModal);
+            Statamic.$activitypub.bus.off('activitypub:polls:open-edit', this.openEditPollModal);
+            Statamic.$activitypub.bus.off('activitypub:polls:open-drawer', this.openViewPollDrawer);
+
             Statamic.$activitypub.bus.off('activitypub:inbox:create-poll', this.openPollModal);
             Statamic.$activitypub.bus.off('activitypub:inbox:edit-poll', this.openEditPollModal);
             Statamic.$activitypub.bus.off('activitypub-open-poll-drawer', this.openViewPollDrawer);

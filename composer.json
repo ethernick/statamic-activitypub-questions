@@ -1,23 +1,54 @@
 {
     "name": "ethernick/statamic-activitypub-questions",
-    "description": "ActivityPub Questions and Polls for Statamic",
+    "description": "ActivityPub Questions, Interactive Fediverse Polls, and Real-Time Analytics for Statamic 5.x and 6.x",
+    "license": "proprietary",
+    "type": "statamic-addon",
+    "keywords": [
+        "statamic",
+        "statamic-addon",
+        "activitypub",
+        "questions",
+        "polls",
+        "voting",
+        "surveys",
+        "fediverse",
+        "mastodon",
+        "cms"
+    ],
+    "homepage": "https://github.com/ethernick/statamic-activitypub-questions",
+    "authors": [
+        {
+            "name": "Nick Kempinski",
+            "homepage": "https://github.com/ethernick",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/ethernick/statamic-activitypub-questions/issues",
+        "source": "https://github.com/ethernick/statamic-activitypub-questions",
+        "docs": "https://github.com/ethernick/statamic-activitypub-questions/docs"
+    },
+    "require": {
+        "php": "^8.2",
+        "statamic/cms": "^5.0 | ^6.0",
+        "ethernick/statamic-activitypub-core": "^0.9 || ^1.0 || dev-main"
+    },
     "autoload": {
         "psr-4": {
             "Ethernick\\ActivityPubQuestions\\": "src/"
         }
     },
-    "require": {
-        "ethernick/statamic-activitypub-core": "*"
-    },
     "extra": {
         "statamic": {
             "name": "ActivityPub Questions",
-            "description": "ActivityPub Questions and Polls"
+            "description": "ActivityPub Questions, Interactive Fediverse Polls, and Real-Time Analytics"
         },
         "laravel": {
             "providers": [
                 "Ethernick\\ActivityPubQuestions\\ActivityPubQuestionsServiceProvider"
             ]
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

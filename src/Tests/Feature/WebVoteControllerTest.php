@@ -138,4 +138,59 @@ class WebVoteControllerTest extends TestCase
         // Reset env
         app()['env'] = 'testing';
     }
+
+    public function test_cp_vote_with_mixed_actor_types()
+    {
+        $admin = \Statamic\Facades\User::make()->id('admin')->email('admin@example.com')->makeSuper();
+        $admin->save();
+        $this->actingAs($admin);
+
+        // Ensure actors collection exists
+        if (!\Statamic\Facades\Collection::find('actors')) {
+            \Statamic\Facades\Collection::make('actors')->save();
+        }
+
+        // Create a poll
+        $poll = Entry::make()
+            ->collection('polls')
+            ->slug('test-poll-cp')
+            ->data([
+                'title' => 'Favorite Color?',
+                'options' => [
+                    ['name' => 'Red', 'count' => 0],
+                ],
+                'closed' => false,
+                'voters_count' => 0,
+            ]);
+        $poll->save();
+
+        // Create an actor
+        $actor = Entry::make()
+            ->collection('actors')
+            ->slug('test-voter-actor')
+            ->data([
+                'title' => 'Voter Actor',
+            ]);
+        $actor->save();
+
+        // Create a note with actor as an array to poison the Stache collection
+        $poisonNote = Entry::make()
+            ->collection('notes')
+            ->slug('poison-note')
+            ->data([
+                'content' => 'Poison Note',
+                'actor' => ['some-other-actor-id'],
+            ]);
+        $poisonNote->save();
+
+        // Attempt to vote via CP endpoint
+        $response = $this->postJson(cp_route('activitypub.polls.vote'), [
+            'poll' => $poll->id(),
+            'choices' => ['Red'],
+            'actor' => $actor->id(),
+        ]);
+
+        $response->assertStatus(200);
+    }
 }
+
