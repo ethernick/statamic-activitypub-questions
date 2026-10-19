@@ -12,7 +12,7 @@
 
 > [!NOTE]  
 > **Pre-Release:**  
-> ActivityPub Questions is an early companion addon for [`statamic-activitypub-core`](https://worktree.ca/ethernick/statamic-activitypub-core). Free for local development and non-production testing under our [Commercial Source-Available License](https://worktree.ca/ethernick/statamic-activitypub-questions/src/branch/main/LICENSE.md). Available for feedback ahead of official Marketplace publication.
+> ActivityPub Questions is an early companion addon for [`statamic-activitypub-core`](https://github.com/ethernick/statamic-activitypub-core). Free for local development and non-production testing under our [Commercial Source-Available License](https://github.com/ethernick/statamic-activitypub-questions/src/branch/main/LICENSE.md). Available for feedback ahead of official Marketplace publication.
 
 Add interactive Fediverse polls, multi-choice surveys, and real-time vote analytics to your Statamic site. **ActivityPub Questions** extends [`statamic-activitypub-core`](https://github.com/ethernick/statamic-activitypub-core) to seamlessly publish ActivityStreams `Question` polls to Mastodon, Pixelfed, and the Fediverse, collect incoming votes, and accept public web votes directly on your site.
 
