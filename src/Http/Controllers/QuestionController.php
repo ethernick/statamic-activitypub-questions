@@ -172,8 +172,14 @@ class QuestionController extends BaseObjectController implements ActivityHandler
         $alreadyVoted = Entry::query()
             ->where('collection', 'notes')
             ->where('in_reply_to', $poll->id())
-            ->where('actor', $actor->id())
-            ->exists();
+            ->get()
+            ->first(function ($note) use ($actor) {
+                $noteActor = $note->get('actor');
+                if (is_array($noteActor)) {
+                    return in_array($actor->id(), $noteActor);
+                }
+                return $noteActor === $actor->id();
+            }) !== null;
 
         if ($alreadyVoted) {
             return response()->json(['error' => 'Already voted'], 422);

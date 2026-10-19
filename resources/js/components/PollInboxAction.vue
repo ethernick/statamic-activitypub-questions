@@ -24,6 +24,7 @@ export default {
     methods: {
         openDrawer() {
             if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
+                Statamic.$activitypub.bus.emit('activitypub:polls:open-drawer', this.note);
                 Statamic.$activitypub.bus.emit('activitypub-open-poll-drawer', this.note);
             }
         }
