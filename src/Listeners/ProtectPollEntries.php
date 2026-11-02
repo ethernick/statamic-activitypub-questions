@@ -22,12 +22,17 @@ class ProtectPollEntries
         if ($entry->collection()->handle() === 'notes') {
             $inReplyTo = $entry->get('in_reply_to');
             if ($inReplyTo) {
-                // If the parent is a poll, protect this reply
-                $parent = Entry::query()->where('collection', 'polls')->where('activitypub_id', $inReplyTo)->exists()
-                    || Entry::find($inReplyTo);
+                if (is_array($inReplyTo)) {
+                    $inReplyTo = $inReplyTo[0] ?? null;
+                }
+                if ($inReplyTo) {
+                    // If the parent is a poll, protect this reply
+                    $parent = Entry::query()->where('collection', 'polls')->where('activitypub_id', $inReplyTo)->exists()
+                        || Entry::find($inReplyTo);
 
-                if ($parent) {
-                    return true;
+                    if ($parent) {
+                        return true;
+                    }
                 }
             }
         }

@@ -44,12 +44,12 @@ class ActivityPubQuestionsInstall extends Command
 
     protected function ensureBlueprint(string $handle): void
     {
-        $blueprintDir = resource_path("blueprints/collections/{$handle}");
+        $blueprintPath = \Ethernick\ActivityPubCore\Services\ActivityPubUtils::blueprintPath("collections/{$handle}/poll.yaml");
+        $blueprintDir = dirname($blueprintPath);
         if (!File::exists($blueprintDir)) {
             File::makeDirectory($blueprintDir, 0755, true);
         }
 
-        $blueprintPath = "{$blueprintDir}/poll.yaml";
         $stubPath = __DIR__ . '/../../../resources/blueprints/templates/collections/polls.yaml';
 
         if (!File::exists($stubPath)) {

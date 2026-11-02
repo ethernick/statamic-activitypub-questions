@@ -11,7 +11,7 @@ class PollsActivityTest extends TestCase
     {
         parent::setUp();
         
-        $this->setupCollections(['actors', 'activities', 'polls']);
+        $this->setupCollections(['actors', 'activities', 'polls', 'notes']);
 
         // Setup ActivityPub config in sandbox
         \Statamic\Facades\File::put(
@@ -69,5 +69,47 @@ class PollsActivityTest extends TestCase
         // Old logic would have resulted in "Poll Tester created an article"
         $this->assertStringContainsString('created a question', $activity->get('content'));
         $this->assertEquals('Create', $activity->get('type'));
+    }
+
+    public function test_outgoing_vote_formatting()
+    {
+        $actor = Entry::make()
+            ->collection('actors')
+            ->slug('voter-actor')
+            ->data([
+                'title' => 'Voter',
+                'is_internal' => true,
+            ]);
+        $actor->save();
+
+        $poll = Entry::make()
+            ->collection('polls')
+            ->slug('test-poll')
+            ->data([
+                'title' => 'Test Poll',
+                'is_internal' => true,
+                'published' => true,
+            ]);
+        $poll->save();
+
+        $vote = Entry::make()
+            ->collection('notes')
+            ->slug('test-vote')
+            ->data([
+                'title' => 'Vote Note',
+                'content' => '<p>Option 1</p>',
+                'actor' => $actor->id(),
+                'in_reply_to' => $poll->id(),
+                'is_internal' => true,
+                'published' => true,
+            ]);
+        $vote->save();
+
+        $transformer = app(\Ethernick\ActivityPubCore\Transformers\ActivityPubObjectTransformer::class);
+        $data = $transformer->transform($vote);
+
+        $this->assertEquals('Note', $data['type']);
+        $this->assertEquals('Option 1', $data['name']);
+        $this->assertArrayNotHasKey('content', $data);
     }
 }

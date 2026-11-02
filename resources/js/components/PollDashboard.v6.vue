@@ -108,6 +108,8 @@
             @closed="selectedPoll = null" 
             @refresh="fetchMetrics"
         />
+
+        <activitypub-modals :actors="actors" @submit-success="fetchMetrics" />
     </div>
 </template>
 
@@ -165,11 +167,26 @@ export default {
         this.fetchMetrics();
         
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
-            Statamic.$activitypub.bus.on('activitypub-open-poll-drawer', (note) => {
-                // Find matching poll in our list or fetch specifically
-                this.selectedPoll = note; // We'll handle both formats in the drawer
+            this._onOpenDrawer = (note) => {
+                this.selectedPoll = note;
                 this.$refs.drawer.open();
-            });
+            };
+            const bus = Statamic.$activitypub.bus;
+            const on = bus.on ? bus.on.bind(bus) : (bus.$on ? bus.$on.bind(bus) : null);
+            if (on) {
+                on('activitypub:polls:open-drawer', this._onOpenDrawer);
+                on('activitypub-open-poll-drawer', this._onOpenDrawer);
+            }
+        }
+    },
+    beforeUnmount() {
+        if (typeof Statamic !== 'undefined' && Statamic.$activitypub && this._onOpenDrawer) {
+            const bus = Statamic.$activitypub.bus;
+            const off = bus.off ? bus.off.bind(bus) : (bus.$off ? bus.$off.bind(bus) : null);
+            if (off) {
+                off('activitypub:polls:open-drawer', this._onOpenDrawer);
+                off('activitypub-open-poll-drawer', this._onOpenDrawer);
+            }
         }
     },
     methods: {

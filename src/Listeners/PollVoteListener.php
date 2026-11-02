@@ -123,12 +123,9 @@ class PollVoteListener
         $name = (string) $voteNote->get('title'); // Statamic maps AP 'name' to 'title'
         
         // If title ended up as a UUID (Statamic fallback), check the raw JSON
-        $apJson = $voteNote->get('activitypub_json');
-        if ($apJson) {
-            $apData = json_decode($apJson, true);
-            if ($apData && isset($apData['name'])) {
-                $name = $apData['name'];
-            }
+        $apData = \Ethernick\ActivityPubCore\Storage\ActivityPubPayload::for($voteNote)->toArray();
+        if ($apData && isset($apData['name'])) {
+            $name = $apData['name'];
         }
 
         $options = $poll->get('options', []);

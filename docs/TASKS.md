@@ -1,46 +1,79 @@
-# Active Tasks
+# ActivityPubQuestions Task List & Roadmap
 
 > **Legend**
 > - [ ] To Do
 > - [/] In Progress
 > - [x] Done
 
-## Current Priority: Transition & Decoupling from Core
+---
 
-### Core Refactoring (Dependencies)
-- [x] Refactor Core `ActivityPubListener` to remove hardcoded `Question` payload generation and allow type-specific formatting hooks.
-- [x] Refactor Core `InboxHandler` to delegate incoming `Question` activities/votes to registered handlers.
-- [x] Build a Vue Hook/Action registry in Core (`hooks.js`) to allow dynamic injection of UI components.
-- [x] Establish a Hook naming schema (e.g. `{context}-{component}-{location}`) and create `addons/ethernick/ActivityPubCore/docs/HOOKS.md` to track available hooks.
-- [x] Refactor Core Vue Components (`InboxNote.vue`) to render UI hooks using `HookLoader` and dynamic components.
+## 1. Core Architecture, Data Modeling & Federation
 
-### Component & Logic Migration (Questions Addon)
-- [x] Port over `InboxPollForm.vue` and `InboxPollForm.v6.vue` from `ActivityPubCore` to `ActivityPubQuestions`.
-- [x] Register Questions Vue components (PollBox) in `ActivityPubQuestionsServiceProvider` and its own `cp.js`.
-- [x] Implement the backend payload formatter (`QuestionPayloadFormatter`) within the addon.
-- [x] Implement the backend inbox handler (`QuestionInboxHandler`) for incoming `Question` activities and votes.
+### 1.1 ActivityPub Types & Decoupling from Core
+- [x] **Core Hook & Delegate Decoupling**
+  - [x] Refactor Core `ActivityPubListener` to remove hardcoded `Question` payload generation and allow type-specific formatting hooks.
+  - [x] Refactor Core `InboxHandler` to delegate incoming `Question` activities/votes to registered handlers.
+  - [x] Implement `QuestionPayloadFormatter` and `QuestionInboxHandler`.
+- [x] **Vote Processing & Actor Deduplication**
+  - [x] Implement `PollVoteListener` for processing incoming `Note` replies and vote options.
+  - [x] Implement duplicate voting prevention by tracking actor URIs.
+  - [x] Fix critical `TypeError` when evaluating notes with array actor fields in `QuestionController->vote`.
+  - [x] Register outgoing vote formatting hook to ensure remote Mastodon compatibility.
 
-### Cleanup & Verification
-- [x] Remove all remaining hardcoded `Question` and `Poll` references from `ActivityPubCore` backend and frontend.
-- [/] Finish up processing Poll Updates (e.g., closing a poll, updating tallies).
-- [x] Implement `PollVoteListener` in `ActivityPubQuestions` to process incoming `Note` replies:
-    - [x] Match `Note` content/title to `Poll` options.
-    - [x] Increment individual option counts and total `voters_count`.
-    - [x] Track ActivityPub IDs of voters on the Poll to prevent double-counting.
-- [x] Fix missing slug/title for inbox Questions to match Note behavior (optional title, defaults to UUID).
-- [x] Fix JS console 404 error by building and publishing Question addon assets.
-- [x] Write integration tests verifying the decoupled Question addon works seamlessly with Core.
-- [x] Implement `New Poll` action injection into `Inbox.vue` via hooks.
+### 1.2 Automated Testing & Sandbox Isolation
+- [x] Refactor `ActivityPubQuestionsInstall.php` to use `ActivityPubUtils::blueprintPath()` to respect `ProvidesSandbox` isolation.
+- [x] Create comprehensive `FreshInstallationTest.php` to verify non-destructive collection and blueprint generation.
+- [x] Verify full PHPUnit test suite passes with 100% success (14/14 tests, 46 assertions).
 
-## UI & Reporting
-- [x] Register CP navigation and routes for Poll Analytics <!-- id: 36 -->
-- [x] Implement `PollAnalyticsController` for backend data aggregation <!-- id: 37 -->
-- [x] Create `PollDashboard.vue` with rollup metrics and masonry layout <!-- id: 38 -->
-- [x] Implement cumulative line chart for vote trends <!-- id: 39 -->
-- [x] Develop `PollCard.vue` and `PollDrawer.vue` for detailed stats <!-- id: 40 -->
-- [x] Integrate "chart" icon hook in Inbox to open Poll Drawer <!-- id: 41 -->
-- [x] Ensure poll-related activities are excluded from automatic cleanup/purging <!-- id: 42 -->
-- [x] Refine SVG icon for menu and inbox to match natural Statamic CP aesthetic (flat, outlined bar chart). <!-- id: 43 -->
-- [x] Rename `PollDrawer.vue` to `PollStack.vue` and update all imports. <!-- id: 44 -->
-- [x] Treat `Question` as a Major Activity in the inbox foundation. <!-- id: 45 -->
+---
 
+## 2. Control Panel & Frontend Presentation
+
+### 2.1 CP Analytics & Poll Drawer UI
+- [x] Build dedicated CP Polls Analytics Dashboard, charts, and slide-over drawer stacks.
+- [x] Port `InboxPollForm.vue` and `InboxPollForm.v6.vue` from `ActivityPubCore` to `ActivityPubQuestions`.
+- [x] Register Questions Vue components (`PollBox`) in `ActivityPubQuestionsServiceProvider` and addon `cp.js`.
+- [x] Build Vue Hook/Action registry integration in Core (`hooks.js`) allowing dynamic component injection.
+
+### 2.2 Dual-Build Pipeline (Statamic 5 & 6)
+- [x] Configure Vite and swapper script to verify dual frontend bundles compile cleanly (`build:v5` and `build:v6`).
+
+---
+
+## 3. Packaging, Developer Standards & Documentation
+
+### 3.1 Package Metadata & Cleanup
+- [x] Standardize `composer.json` for Packagist & Statamic Marketplace (`statamic-addon`, proprietary/commercial source-available license, proper author/support links, keywords).
+- [x] Clean up and remove stale `composer.lock` file from repository.
+
+### 3.2 Developer Guides & Marketplace Documentation
+- [x] Overhaul `README.md` with official Statamic 5/6 badges, feature matrix, Quick Start, Mermaid architecture, and Antlers tags.
+- [x] Author `docs/INSTALLATION.md` detailing system requirements, interactive installer, scheduler setup, and templates.
+- [x] Author `docs/TROUBLESHOOTING.md` covering common diagnostic flows, vote tallying bugs, and CLI helpers.
+- [x] Author `docs/QUESTIONS_GUIDE.md` detailing W3C ActivityStreams 2.0 `Question` schema, `oneOf`/`anyOf`, and vote lifecycles.
+- [x] Author `docs/HOOKS.md` detailing backend filters, vote listeners, and CP Vue hook extension points.
+- [x] Author `docs/MARKETPLACE_LAUNCH.md` with 1200x630 hero banner specs, 4 screenshot capture briefs, 15-second video storyboard, and marketing copy pack.
+
+---
+
+## 4. Active Release Punchlist (Pre-Launch Verification)
+
+- [ ] **Task 4.1: Tag Release**
+  - [ ] Tag release **`v0.8.0`** (Beta milestone) on GitHub.
+- [ ] **Task 4.2: Packagist Registration**
+  - [ ] Register repository on Packagist (`ethernick/statamic-activitypub-questions`).
+  - [ ] Configure GitHub webhook for automatic package sync.
+- [ ] **Task 4.3: Statamic Marketplace Listing**
+  - [ ] Configure Statamic Marketplace listing:
+    - Price: **$10** (Early-Access Beta price, marked to scale to $29–$39 at v1.0).
+    - Version: **0.8.x**.
+  - [ ] Capture CP screenshots according to `MARKETPLACE_LAUNCH.md` specifications.
+  - [ ] Submit addon listing on the Statamic Marketplace portal.
+
+---
+
+## 5. Future Roadmap (Post-v1.0)
+
+- [ ] **Advanced Poll Expiration Schedules**: Custom cron handlers for fine-grained, second-level poll closure notifications.
+- [ ] **Multi-Choice AnyOf Extensions**: Dynamic UI rendering for multi-selection checkboxes and aggregate percentage distribution.
+- [ ] **Federated Live-Poll Webhooks**: Instant client notification pushes via WebSockets when new votes are accepted.

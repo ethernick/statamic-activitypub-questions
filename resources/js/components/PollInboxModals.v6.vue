@@ -70,28 +70,35 @@ export default {
     },
     mounted() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
-            // Vue 3 compatible event listening if using a mitt-like bus
-            if (typeof Statamic.$activitypub.bus.on === 'function') {
-                Statamic.$activitypub.bus.on('activitypub:inbox:create-poll', this.openPollModal);
-                Statamic.$activitypub.bus.on('activitypub:inbox:edit-poll', this.openEditPollModal);
-                Statamic.$activitypub.bus.on('activitypub-open-poll-drawer', this.openViewPollDrawer);
-            } else if (typeof Statamic.$activitypub.bus.$on === 'function') {
-                Statamic.$activitypub.bus.$on('activitypub:inbox:create-poll', this.openPollModal);
-                Statamic.$activitypub.bus.$on('activitypub:inbox:edit-poll', this.openEditPollModal);
-                Statamic.$activitypub.bus.$on('activitypub-open-poll-drawer', this.openViewPollDrawer);
+            const bus = Statamic.$activitypub.bus;
+            const on = bus.on ? bus.on.bind(bus) : (bus.$on ? bus.$on.bind(bus) : null);
+            if (on) {
+                // Standardized events
+                on('activitypub:polls:open-create', this.openPollModal);
+                on('activitypub:polls:open-edit', this.openEditPollModal);
+                on('activitypub:polls:open-drawer', this.openViewPollDrawer);
+
+                // Legacy backward-compatible events
+                on('activitypub:inbox:create-poll', this.openPollModal);
+                on('activitypub:inbox:edit-poll', this.openEditPollModal);
+                on('activitypub-open-poll-drawer', this.openViewPollDrawer);
             }
         }
     },
     beforeUnmount() {
         if (typeof Statamic !== 'undefined' && Statamic.$activitypub) {
-             if (typeof Statamic.$activitypub.bus.off === 'function') {
-                Statamic.$activitypub.bus.off('activitypub:inbox:create-poll', this.openPollModal);
-                Statamic.$activitypub.bus.off('activitypub:inbox:edit-poll', this.openEditPollModal);
-                Statamic.$activitypub.bus.off('activitypub-open-poll-drawer', this.openViewPollDrawer);
-            } else if (typeof Statamic.$activitypub.bus.$off === 'function') {
-                Statamic.$activitypub.bus.$off('activitypub:inbox:create-poll', this.openPollModal);
-                Statamic.$activitypub.bus.$off('activitypub:inbox:edit-poll', this.openEditPollModal);
-                Statamic.$activitypub.bus.$off('activitypub-open-poll-drawer', this.openViewPollDrawer);
+            const bus = Statamic.$activitypub.bus;
+            const off = bus.off ? bus.off.bind(bus) : (bus.$off ? bus.$off.bind(bus) : null);
+            if (off) {
+                // Standardized events
+                off('activitypub:polls:open-create', this.openPollModal);
+                off('activitypub:polls:open-edit', this.openEditPollModal);
+                off('activitypub:polls:open-drawer', this.openViewPollDrawer);
+
+                // Legacy backward-compatible events
+                off('activitypub:inbox:create-poll', this.openPollModal);
+                off('activitypub:inbox:edit-poll', this.openEditPollModal);
+                off('activitypub-open-poll-drawer', this.openViewPollDrawer);
             }
         }
     },

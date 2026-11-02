@@ -43,11 +43,13 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
                 ['polls'],
                 \Ethernick\ActivityPubQuestions\Http\Handlers\PollStoreHandler::class,
                 \Ethernick\ActivityPubQuestions\Http\Handlers\PollOutboxHandler::class,
-                \Ethernick\ActivityPubQuestions\Jobs\QuestionInboxHandler::class
+                \Ethernick\ActivityPubQuestions\Jobs\QuestionInboxHandler::class,
+                ['options', 'voters_count', 'closed', 'end_time']
             );
 
             $this->registerInboxHooks();
             $this->registerStoreHooks();
+            $this->registerOutboxHooks();
         }
 
         $this->registerNav();
@@ -121,8 +123,14 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
             $votes = \Statamic\Facades\Entry::query()
                 ->where('collection', 'notes')
                 ->whereIn('in_reply_to', $allPollIdentifiers)
-                ->whereIn('actor', $userActors)
-                ->get();
+                ->get()
+                ->filter(function ($vote) use ($userActors) {
+                    $actor = $vote->get('actor');
+                    if (is_array($actor)) {
+                        return !empty(array_intersect($actor, $userActors));
+                    }
+                    return in_array($actor, $userActors);
+                });
 
             $voteCache = [];
             foreach ($pollIds as $pollId) {
@@ -206,6 +214,38 @@ class ActivityPubQuestionsServiceProvider extends AddonServiceProvider
             }
             if (!$entry->has('closed')) {
                 $entry->set('closed', false);
+            }
+        });
+    }
+
+    protected function registerOutboxHooks(): void
+    {
+        ActivityPubTypes::registerOutboxHook(function ($entry, &$data) {
+            if ($entry->collectionHandle() === 'notes') {
+                $inReplyTo = $entry->get('in_reply_to');
+                if ($inReplyTo) {
+                    if (is_array($inReplyTo)) {
+                        $inReplyTo = $inReplyTo[0] ?? null;
+                    }
+                    if ($inReplyTo) {
+                        $poll = \Statamic\Facades\Entry::find($inReplyTo);
+                        if (!$poll || $poll->collection()->handle() !== 'polls') {
+                            $poll = \Statamic\Facades\Entry::query()
+                                ->where('collection', 'polls')
+                                ->where('activitypub_id', $inReplyTo)
+                                ->first();
+                        }
+                        
+                        if ($poll) {
+                            $content = strip_tags((string)$entry->get('content'));
+                            $content = trim($content);
+                            if (!empty($content)) {
+                                $data['name'] = $content;
+                            }
+                            unset($data['content']);
+                        }
+                    }
+                }
             }
         });
     }
